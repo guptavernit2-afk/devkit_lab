@@ -1,0 +1,13 @@
+{
+  "name": "devkit-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Small, dependency-free tools for everyday development.",
+  "type": "module",
+  "bin": { "devkit": "./bin/devkit.js" },
+  "scripts": {
+    "start": "node bin/devkit.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=22" }
+}
