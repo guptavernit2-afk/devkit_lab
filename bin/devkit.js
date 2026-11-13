@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
 import { jsonCommand } from '../src/json.js';
+import { urlCommand } from '../src/url.js';
 
 export const commands = new Map([
   ['json', { description: 'Format or validate JSON (json --help)', run: jsonCommand }],
+  ['url', { description: 'Encode or decode a URL component (url --help)', run: urlCommand }],
 ]);
 
 export function run(args) {
