@@ -2,10 +2,12 @@
 import { pathToFileURL } from 'node:url';
 import { jsonCommand } from '../src/json.js';
 import { urlCommand } from '../src/url.js';
+import { timeCommand } from '../src/time.js';
 
 export const commands = new Map([
   ['json', { description: 'Format or validate JSON (json --help)', run: jsonCommand }],
   ['url', { description: 'Encode or decode a URL component (url --help)', run: urlCommand }],
+  ['time', { description: 'Convert Unix timestamps and UTC dates (time --help)', run: timeCommand }],
 ]);
 
 export function run(args) {
