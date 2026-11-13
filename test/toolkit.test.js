@@ -30,6 +30,47 @@ test('JSON rejects malformed data and incorrect arguments', () => {
   assert.throws(() => jsonCommand(['format', '{}', 'extra']), /Usage/);
 });
 
+test('JSON minification removes whitespace without changing nested values or string contents', () => {
+  const value = { text: ' keep  spaces\n\t"quotes" ', unicode: 'नमस्ते 🌍',
+    nested: [null, true, false, 0, { empty: '' }] };
+  const result = jsonCommand(['minify', JSON.stringify(value, null, 2)]);
+  assert.equal(result, JSON.stringify(value));
+  assert.deepEqual(JSON.parse(result), value);
+  for (const input of ['null', 'true', '0', '""', '[]', '{}']) {
+    assert.equal(jsonCommand(['minify', `  ${input}  `]), input);
+  }
+});
+
+test('JSON minification supports files and stdin through the CLI', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'devkit-minify-'));
+  try {
+    const path = join(dir, 'data with spaces.json');
+    const input = '{\n  "ok": true,\n  "text": "a  b"\n}';
+    writeFileSync(path, input);
+    for (const result of [invoke(['json', 'minify', '--file', path]),
+      invoke(['json', 'minify', '--stdin'], input)]) {
+      assert.equal(result.status, 0);
+      assert.equal(result.stdout, '{"ok":true,"text":"a  b"}\n');
+      assert.equal(result.stderr, '');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('JSON minification rejects invalid input and incorrect arguments', () => {
+  for (const input of ['', '{', '{"x":1,}']) {
+    const result = invoke(['json', 'minify', '--stdin'], input);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /^Error: Invalid JSON:/);
+  }
+  for (const args of [[], ['{}', 'extra'], ['--file'], ['--unknown']]) {
+    assert.throws(() => jsonCommand(['minify', ...args]), /Usage/);
+  }
+  assert.match(jsonCommand(['--help']), /format\|minify\|validate/);
+});
+
 test('JSON accepts file and piped input, and reports missing files', () => {
   const dir = mkdtempSync(join(tmpdir(), 'devkit-test-'));
   try {

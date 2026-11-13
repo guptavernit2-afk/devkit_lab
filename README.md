@@ -26,6 +26,7 @@ The examples below use the optional `devkit` command. Without `npm link`, replac
 
 ```sh
 devkit json format '{"ready":true,"items":[1,2]}'
+devkit json minify --file data.json
 devkit json validate --file package.json
 ```
 
@@ -41,10 +42,15 @@ In Bash:
 cat package.json | node bin/devkit.js json format --stdin
 ```
 
-Formatting uses two-space indentation. Validation accepts all JSON values,
+Formatting uses two-space indentation. Minification removes insignificant
+whitespace and outputs compact JSON, preserving whitespace inside strings.
+Both commands accept a JSON string, `--file <path>`, or `--stdin`, and end their
+output with a newline so it works naturally in shell pipelines.
+Validation accepts all JSON values,
 including `null`, strings, and numbers. These tools use JavaScript's JSON parser:
 duplicate keys retain the last value, and large numbers can lose precision when
-formatted. Avoid formatting documents that require exact large integer values.
+formatted or minified. Avoid either transformation on documents that require
+exact large integer values.
 
 ### URL components
 
@@ -88,6 +94,6 @@ and Node's built-in APIs, with no third-party runtime dependencies.
 
 GitHub Actions runs the suite on Windows and Linux with Node.js 22 and 24.
 
-Useful next steps include a JSON minifier, an explicit form-urlencoded mode,
+Useful next steps include an explicit form-urlencoded mode,
 and timestamp support for numeric timezone offsets. Each should include clear
 usage, input validation, and tests before becoming part of the toolkit.
