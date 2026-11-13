@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
+import { jsonCommand } from '../src/json.js';
 
-export const commands = new Map();
+export const commands = new Map([
+  ['json', { description: 'Format or validate JSON (json --help)', run: jsonCommand }],
+]);
 
 export function run(args) {
   const [command, ...rest] = args;
