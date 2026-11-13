@@ -1,16 +1,17 @@
 import { readFileSync } from 'node:fs';
 
-const help = `Usage: devkit json <format|validate> <input>
+const help = `Usage: devkit json <format|minify|validate> <input>
 
 Input: a JSON string, --file <path>, or --stdin
 Examples:
   devkit json format '{"ready":true}'
+  devkit json minify --file data.json
   devkit json validate --file data.json`;
 
 export function jsonCommand(args) {
   if (args.length === 1 && args[0] === '--help') return help;
   const [action, ...input] = args;
-  if (!['format', 'validate'].includes(action)) throw new Error(help);
+  if (!['format', 'minify', 'validate'].includes(action)) throw new Error(help);
   let source;
   if (input.length === 1 && input[0] === '--stdin') {
     source = readFileSync(0, 'utf8');
@@ -27,5 +28,6 @@ export function jsonCommand(args) {
   } catch (error) {
     throw new Error(`Invalid JSON: ${error.message}`);
   }
-  return action === 'validate' ? 'Valid JSON' : JSON.stringify(parsed, null, 2);
+  if (action === 'validate') return 'Valid JSON';
+  return JSON.stringify(parsed, null, action === 'format' ? 2 : undefined);
 }
