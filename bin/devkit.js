@@ -4,8 +4,10 @@ import { jsonCommand } from '../src/json.js';
 import { urlCommand } from '../src/url.js';
 import { timeCommand } from '../src/time.js';
 import { base64Command } from '../src/base64.js';
+import { hashCommand } from '../src/hash.js';
 
 export const commands = new Map([
+  ['hash', { description: 'Calculate SHA-256 checksums (hash --help)', run: hashCommand }],
   ['base64', { description: 'Encode or decode UTF-8 text (base64 --help)', run: base64Command }],
   ['json', { description: 'Format or validate JSON (json --help)', run: jsonCommand }],
   ['url', { description: 'Encode or decode a URL component (url --help)', run: urlCommand }],
