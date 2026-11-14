@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 const help = `Usage: devkit json <format|minify|validate> <input>
 
 Input: a JSON string, --file <path>, or --stdin
+A single leading UTF-8 byte-order mark is accepted.
 Examples:
   devkit json format '{"ready":true}'
   devkit json minify --file data.json
@@ -24,7 +25,7 @@ export function jsonCommand(args) {
   }
   let parsed;
   try {
-    parsed = JSON.parse(source);
+    parsed = JSON.parse(source.replace(/^\uFEFF/, ''));
   } catch (error) {
     throw new Error(`Invalid JSON: ${error.message}`);
   }
