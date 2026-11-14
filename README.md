@@ -56,6 +56,11 @@ duplicate keys retain the last value, and large numbers can lose precision when
 formatted or minified. Avoid either transformation on documents that require
 exact large integer values.
 
+All three JSON commands accept one leading UTF-8 byte-order mark, which some
+editors and Windows tools add to files. It is removed before parsing; characters
+inside JSON strings remain unchanged. UTF-16 files and malformed JSON are not
+converted or repaired.
+
 ### URL components
 
 ```sh
