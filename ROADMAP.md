@@ -4,11 +4,12 @@ Each feature ships with validation, tests, usage examples, and passing CI.
 
 ## Next
 
-1. Cryptographically random UUID generation with bounded batch sizes.
-2. JSON input compatibility with UTF-8 byte-order marks from text editors.
-3. Timestamp support for explicit numeric timezone offsets.
+1. JSON input compatibility with UTF-8 byte-order marks from text editors.
+2. Timestamp support for explicit numeric timezone offsets.
 
 ## Delivered
+
+- Cryptographically random UUID generation with bounded batch sizes.
 
 - SHA-256 checksums for text, files, and piped bytes.
 
