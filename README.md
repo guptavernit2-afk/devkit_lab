@@ -1,7 +1,11 @@
 # devkit-lab
 
-Small, dependency-free command-line tools for everyday development. Data stays
-on your machine; the tools do not make network requests.
+A local project setup checker that catches missing, empty, and duplicate
+settings before you run or deploy an app. Compare the keys your project expects
+in `.env.example` with an actual `.env` file, without printing secret values.
+
+Built with Node.js and no third-party runtime dependencies. Settings stay on
+your machine; the checker makes no network requests and never changes your files.
 
 ## Getting started
 
@@ -17,7 +21,27 @@ You can also run `node bin/devkit.js` directly. Optionally run `npm link` to
 make the `devkit` command available locally. No package installation is required
 to run or test the tools.
 
-## Tools
+## Try the setup checker
+
+This included demo has three deliberate mistakes:
+
+```sh
+node bin/devkit.js check --example examples/setup/.env.example --env examples/setup/broken.env
+```
+
+```text
+DUPLICATE env: DEBUG (lines 3, 4)
+MISSING env: EMAIL_API_KEY
+EMPTY env: DATABASE_URL (line 2)
+```
+
+Try `examples/setup/ready.env` instead of `broken.env` to see a passing check.
+For your own project, `devkit check` defaults to `.env.example` and `.env` in the
+current directory. Findings exit with code 1, making the check usable in CI.
+Read [the setup checker guide](docs/setup-checker.md) for syntax, exit codes,
+and limitations. A pass checks file structure; it does not verify credentials.
+
+## Supporting developer tools
 
 - [Base64 text conversion](docs/base64.md)
 - [SHA-256 checksums](docs/hash.md)
