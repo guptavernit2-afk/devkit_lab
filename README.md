@@ -66,6 +66,19 @@ escapes its separators. A literal `+` stays `+` when decoded; form-urlencoded
 input requires different handling. Malformed percent escapes fail with a readable
 error. Quote input containing spaces or shell metacharacters.
 
+Use `form-encode` and `form-decode` for individual HTML form values:
+
+```sh
+devkit url form-encode "a b+c"
+# a+b%2Bc
+devkit url form-decode "a+b%2Bc"
+# a b+c
+```
+
+These commands handle one value, not an entire query string or form body.
+They use `+` for spaces, preserve literal plus signs through `%2B`, and reject
+malformed percent escapes instead of silently replacing invalid text.
+
 ### Unix timestamps
 
 ```sh
@@ -94,6 +107,4 @@ and Node's built-in APIs, with no third-party runtime dependencies.
 
 GitHub Actions runs the suite on Windows and Linux with Node.js 22 and 24.
 
-Useful next steps include an explicit form-urlencoded mode,
-and timestamp support for numeric timezone offsets. Each should include clear
-usage, input validation, and tests before becoming part of the toolkit.
+See [ROADMAP.md](ROADMAP.md) for prioritized next steps.
