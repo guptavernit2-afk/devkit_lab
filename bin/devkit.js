@@ -6,8 +6,10 @@ import { timeCommand } from '../src/time.js';
 import { base64Command } from '../src/base64.js';
 import { hashCommand } from '../src/hash.js';
 import { uuidCommand } from '../src/uuid.js';
+import { checkCommand } from '../src/check.js';
 
 export const commands = new Map([
+  ['check', { description: 'Check project settings before deployment (check --help)', run: checkCommand }],
   ['uuid', { description: 'Generate random UUIDs (uuid --help)', run: uuidCommand }],
   ['hash', { description: 'Calculate SHA-256 checksums (hash --help)', run: hashCommand }],
   ['base64', { description: 'Encode or decode UTF-8 text (base64 --help)', run: base64Command }],
@@ -19,7 +21,7 @@ export const commands = new Map([
 export function run(args) {
   const [command, ...rest] = args;
   if (!command || command === '--help' || command === '-h') {
-    return ['devkit-lab — small tools for everyday development', '', 'Usage: devkit <command> [arguments]', '',
+    return ['devkit-lab — a local project setup checker and developer toolkit', '', 'Usage: devkit <command> [arguments]', '',
       ...Array.from(commands, ([name, entry]) => `  ${name.padEnd(12)} ${entry.description}`),
       '  --help       Show this help'].join('\n');
   }
@@ -30,9 +32,12 @@ export function run(args) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    process.stdout.write(`${run(process.argv.slice(2))}\n`);
+    const result = run(process.argv.slice(2));
+    const { output, exitCode = 0 } = typeof result === 'string' ? { output: result } : result;
+    process.stdout.write(`${output}\n`);
+    process.exitCode = exitCode;
   } catch (error) {
     process.stderr.write(`Error: ${error.message}\n`);
-    process.exitCode = 1;
+    process.exitCode = error.exitCode ?? 1;
   }
 }

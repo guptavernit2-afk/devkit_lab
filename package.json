@@ -2,7 +2,7 @@
   "name": "devkit-lab",
   "version": "0.1.0",
   "private": true,
-  "description": "Small, dependency-free tools for everyday development.",
+  "description": "A local project setup checker that catches missing, empty, and duplicate settings.",
   "type": "module",
   "bin": { "devkit": "./bin/devkit.js" },
   "scripts": {
