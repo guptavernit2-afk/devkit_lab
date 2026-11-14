@@ -19,6 +19,8 @@ to run or test the tools.
 
 ## Tools
 
+- [Base64 text conversion](docs/base64.md)
+
 The examples below use the optional `devkit` command. Without `npm link`, replace
 `devkit` with `node bin/devkit.js`.
 
