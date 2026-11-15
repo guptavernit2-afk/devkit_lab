@@ -12,14 +12,14 @@ PR and commit counts are secondary to useful, reliable behavior.
 - Report malformed declarations and line numbers without exposing values.
 - Read UTF-8 files locally, without modifying files or the shell environment.
 - Return useful CI exit codes and include broken and corrected demo files.
+- Emit versioned JSON reports for scripts and CI without exposing values.
 
 ## Next, in priority order
 
-1. Machine-readable reports with the same guarantee that values stay hidden.
-2. Explicit optional settings and type rules, including boolean and port checks.
-3. Detect unresolved variable references without executing or expanding shell code.
-4. A documented GitHub Actions example using dummy fixtures and private inputs.
-5. Better dotenv compatibility, starting with clearly specified multiline values.
+1. Explicit optional settings and type rules, including boolean and port checks.
+2. Detect unresolved variable references without executing or expanding shell code.
+3. A documented GitHub Actions example using dummy fixtures and private inputs.
+4. Better dotenv compatibility, starting with clearly specified multiline values.
 
 ## Later, after feedback
 

@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 
-const help = `Usage: devkit check [--example <path>] [--env <path>]
+const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
 Compare .env.example with .env (the default paths).
 Report missing settings, empty values, and duplicate keys without printing values.
 All keys in the example are required. Files are read locally and never changed.
+Output defaults to text; --format json emits a versioned report without values.
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -85,7 +86,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -96,7 +97,22 @@ export function checkCommand(args) {
     options.set(flag, value);
     seen.add(flag);
   }
+  if (!['text', 'json'].includes(options.get('--format'))) {
+    throw new CheckInputError('Format must be text or json.');
+  }
   const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'));
+  if (options.get('--format') === 'json') {
+    return {
+      output: JSON.stringify({
+        schemaVersion: 1,
+        status: report.findings.length ? 'fail' : 'pass',
+        required: report.required,
+        issueCount: report.findings.length,
+        findings: report.findings,
+      }, null, 2),
+      exitCode: report.findings.length ? 1 : 0,
+    };
+  }
   const output = ['devkit-lab — project setup check', ''];
   for (const finding of report.findings) {
     const { code, role, key, line, lines } = finding;
