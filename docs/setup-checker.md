@@ -90,6 +90,37 @@ credential validity. Use an explicit example file listing only required keys.
 
 ## CI exit codes
 
+For scripts and CI integrations, request a JSON report:
+
+```sh
+node bin/devkit.js check --format json
+```
+
+Stdout contains exactly one JSON object and a trailing newline. No heading or
+text summary is mixed in. `--format text` explicitly selects the default report.
+All input options can be combined in either order. Example success report:
+
+```json
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "required": 3,
+  "issueCount": 0,
+  "findings": []
+}
+```
+
+`required` counts unique names in the example. `status` is `pass` or `fail`, and
+`issueCount` equals the findings array length. A finding has `code` and `role`
+(`example` or `env`). Codes are `missing` (with `key`), `empty` (with `key` and
+`line`), `duplicate` (with `key` and `lines`), `invalid` (with `line`), or
+`no-requirements`. Line numbers start at 1. Values, paths, and source snippets
+are excluded. `schemaVersion` allows consumers to check report compatibility.
+
+Exit codes are unchanged in JSON mode. On argument or file errors (exit 2),
+stdout is empty and stderr contains a readable error, not a JSON report. Check
+the exit code before attempting to parse stdout. Help remains readable text.
+
 | Code | Meaning |
 | --- | --- |
 | 0 | No findings, or help requested |

@@ -41,6 +41,9 @@ current directory. Findings exit with code 1, making the check usable in CI.
 Read [the setup checker guide](docs/setup-checker.md) for syntax, exit codes,
 and limitations. A pass checks file structure; it does not verify credentials.
 
+Use `devkit check --format json` for a machine-readable report in scripts and CI.
+It includes finding codes and line numbers, with settings values kept hidden.
+
 ## Supporting developer tools
 
 - [Base64 text conversion](docs/base64.md)
