@@ -15,6 +15,30 @@ function checker(t, example, env) {
   return (...options) => checkCommand(['--example', examplePath, '--env', envPath, '--format', 'json', ...options]);
 }
 
+test('boolean and port rules validate actual values without leaking them', t => {
+  for (const port of ['1', '65535']) {
+    assert.equal(checker(t, 'PORT=\nDEBUG=\n', `PORT=${port}\nDEBUG=false`)('--types', 'PORT:port,DEBUG:boolean').exitCode, 0);
+  }
+  for (const port of ['0', '65536', '-1', '1.5', '1e2', '080', 'private-value']) {
+    const result = checker(t, 'PORT=\n', `PORT=${port}`)('--types', 'PORT:port');
+    assert.equal(result.exitCode, 1);
+    assert.deepEqual(JSON.parse(result.output).findings, [{ code: 'type', role: 'env', key: 'PORT', line: 1, expected: 'port' }]);
+  }
+  for (const value of ['TRUE', 'yes', '1', 'false-secret']) {
+    assert.equal(checker(t, 'DEBUG=\n', `DEBUG=${value}`)('--types', 'DEBUG:boolean').exitCode, 1);
+  }
+});
+
+test('type rules compose with optional settings and reject invalid policies', t => {
+  const run = checker(t, 'PORT=\n', '');
+  assert.equal(run('--optional', 'PORT', '--types', 'PORT:port').exitCode, 0);
+  for (const rules of ['PORT:integer', 'PORT', 'PORT:port,PORT:boolean', 'TYPO:port', 'PORT:port,']) {
+    assert.throws(() => run('--types', rules), error => error.exitCode === 2);
+  }
+  const empty = checker(t, 'PORT=\n', 'PORT=')('--types', 'PORT:port');
+  assert.deepEqual(JSON.parse(empty.output).findings.map(f => f.code), ['empty']);
+});
+
 test('optional keys may be absent, but present empty or duplicate keys still fail', t => {
   const absent = checker(t, 'A=\nB=\n', 'A=ready');
   assert.equal(absent().exitCode, 1);

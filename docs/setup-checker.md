@@ -90,6 +90,16 @@ credential validity. Use an explicit example file listing only required keys.
 
 ## CI exit codes
 
+### Explicit types
+
+`devkit check --types DEBUG:boolean,PORT:port` validates selected example keys.
+Boolean values must be exactly `true` or `false`; ports must be decimal integers
+from 1 to 65535 without signs, leading zeros, spaces inside quotes, or exponents.
+Unknown keys, types, or duplicate rules fail with exit 2. Absent optional keys
+are not type-checked. Empty values produce the existing empty finding.
+Type failures have code `type`, `key`, `role`, `line`, and `expected` in JSON;
+the actual value is never included. No types are guessed from names or examples.
+
 ### Optional settings
 
 `devkit check --optional ANALYTICS_KEY,EMAIL_FROM` allows those example keys to
