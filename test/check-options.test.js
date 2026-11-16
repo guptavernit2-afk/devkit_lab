@@ -49,6 +49,25 @@ test('optional keys may be absent, but present empty or duplicate keys still fai
   assert.deepEqual(JSON.parse(present('--optional', 'B').output).findings.map(f => f.code), ['duplicate', 'empty']);
 });
 
+test('reference checks detect missing and empty targets without leaking value fragments', t => {
+  const run = checker(t, 'URL=\n', 'URL=secret-prefix-${MISSING_SECRET_NAME}\n');
+  assert.equal(run().exitCode, 0);
+  const result = run('--references', 'check');
+  assert.equal(result.exitCode, 1);
+  assert.deepEqual(JSON.parse(result.output).findings, [{ code: 'unresolved', role: 'env', key: 'URL', line: 1 }]);
+  assert.doesNotMatch(result.output, /secret-prefix|MISSING_SECRET_NAME/);
+  assert.equal(checker(t, 'URL=\n', 'URL=${HOST}\nHOST=')('--references', 'check').exitCode, 1);
+  assert.equal(checker(t, 'URL=\n', 'URL=${HOST}\nHOST=localhost')('--references', 'check').exitCode, 0);
+  assert.throws(() => run('--references', 'expand'), error => error.exitCode === 2);
+});
+
+test('reference checks ignore comments, escaped references, and single quoted literal values', t => {
+  for (const value of ["'${MISSING}'", 'literal # ${MISSING}', '\\${MISSING}', '"\\${MISSING}"']) {
+    assert.equal(checker(t, 'URL=\n', `URL=${value}`)('--references', 'check').exitCode, 0);
+  }
+  assert.equal(checker(t, 'URL=\n', 'URL="${MISSING}"')('--references', 'check').exitCode, 1);
+});
+
 test('optional lists reject typos, duplicate names, malformed lists, and repeated options', t => {
   const run = checker(t, 'A=\nB=\n', 'A=ready');
   for (const list of ['TYPO', 'A,A', 'A,', ',A', 'A, B', 'BAD-NAME']) {

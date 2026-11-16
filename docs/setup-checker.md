@@ -90,6 +90,17 @@ credential validity. Use an explicit example file listing only required keys.
 
 ## CI exit codes
 
+### Direct variable references
+
+`devkit check --references check` flags a setting containing `${NAME}` when the
+referenced setting is missing or empty in the actual file. Default `ignore`
+preserves previous behavior. Single-quoted literal values, comments, and
+backslash-escaped references are ignored. Shell variables are never consulted.
+The `unresolved` finding includes only `role`, `key`, and `line`; referenced names
+and surrounding text are omitted. Values are never expanded. This is a direct
+presence check: recursive expansion, cycles, `$NAME`, and `${NAME:-fallback}`
+syntax are not analyzed. Type rules check literal values, not expanded results.
+
 ### Explicit types
 
 `devkit check --types DEBUG:boolean,PORT:port` validates selected example keys.
