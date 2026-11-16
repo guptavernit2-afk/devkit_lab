@@ -85,8 +85,10 @@ PATH_VALUE='literal\path'
   literal text; V1 does not resolve references or verify whether they exist.
 
 This is a documented subset rather than a replacement for every dotenv loader.
-It does not validate types, URLs, production debug policy, optional keys, or
-credential validity. Use an explicit example file listing only required keys.
+By default it checks presence, emptiness, duplicates, and syntax. Optional
+settings, boolean/port types, direct references, and unexpected keys can be
+checked with the policies below. URLs, production debug rules, recursive
+references, and credential validity are not validated.
 
 ## CI exit codes
 
@@ -147,12 +149,14 @@ All input options can be combined in either order. Example success report:
 }
 ```
 
-`required` counts unique names in the example. `status` is `pass` or `fail`, and
+`required` counts unique non-optional names in the example. `status` is `pass` or `fail`, and
 `issueCount` equals the findings array length. A finding has `code` and `role`
 (`example` or `env`). Codes are `missing` (with `key`), `empty` (with `key` and
 `line`), `duplicate` (with `key` and `lines`), `invalid` (with `line`), or
 `no-requirements`. Line numbers start at 1. Values, paths, and source snippets
-are excluded. `schemaVersion` allows consumers to check report compatibility.
+are excluded. Opt-in policies also add `type`, `unresolved`, or `unexpected`
+codes as described above. Consumers should tolerate additive codes and fields.
+`schemaVersion` allows consumers to check report compatibility.
 
 Exit codes are unchanged in JSON mode. On argument or file errors (exit 2),
 stdout is empty and stderr contains a readable error, not a JSON report. Check

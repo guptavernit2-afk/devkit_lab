@@ -4,7 +4,7 @@ const help = `Usage: devkit check [--example <path>] [--env <path>] [--format te
 
 Compare .env.example with .env (the default paths).
 Report missing settings, empty values, and duplicate keys without printing values.
-All keys in the example are required. Files are read locally and never changed.
+Example keys are required unless optional. Files are read locally and never changed.
 Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --types DEBUG:boolean,PORT:port validates declared types.

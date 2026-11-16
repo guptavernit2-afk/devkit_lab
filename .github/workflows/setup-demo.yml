@@ -1,0 +1,19 @@
+name: Setup checker integration
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  setup-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Uses only committed dummy fixtures, never repository secrets.
+      - run: npm run test:demo
