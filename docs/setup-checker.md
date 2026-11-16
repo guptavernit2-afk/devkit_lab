@@ -90,6 +90,14 @@ credential validity. Use an explicit example file listing only required keys.
 
 ## CI exit codes
 
+### Unexpected settings
+
+`devkit check --extras error` flags actual-file names not declared in the example,
+which helps catch misspelled settings. Default `allow` preserves existing behavior.
+Keys are case-sensitive; declare every allowed name, including optional ones,
+before enabling this policy. JSON adds `unexpected` with `role`, `key`, and `line`.
+Empty and duplicate checks still apply, and values remain hidden.
+
 ### Direct variable references
 
 `devkit check --references check` flags a setting containing `${NAME}` when the
