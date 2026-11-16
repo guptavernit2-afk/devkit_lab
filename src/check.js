@@ -7,6 +7,7 @@ Report missing settings, empty values, and duplicate keys without printing value
 All keys in the example are required. Files are read locally and never changed.
 Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
+         --types DEBUG:boolean,PORT:port validates declared types.
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -55,10 +56,15 @@ export function parseSettings(source) {
   return { settings, invalidLines };
 }
 
-export function inspectSettings(exampleText, envText, { optional = [] } = {}) {
+export function inspectSettings(exampleText, envText, { optional = [], types = new Map() } = {}) {
   const example = parseSettings(exampleText);
   const actual = parseSettings(envText);
   const optionalKeys = new Set(optional);
+  for (const [key, type] of types) {
+    if (!example.settings.has(key) || !['boolean', 'port'].includes(type)) {
+      throw new CheckInputError('Type rules require example keys and boolean or port types.');
+    }
+  }
   for (const key of optionalKeys) {
     if (!example.settings.has(key)) throw new CheckInputError('Optional keys must be defined in the example file.');
   }
@@ -77,6 +83,12 @@ export function inspectSettings(exampleText, envText, { optional = [] } = {}) {
   }
   for (const [key, entry] of actual.settings) {
     if (!entry.value.trim()) findings.push({ code: 'empty', role: 'env', key, line: entry.lines.at(-1) });
+    const type = types.get(key);
+    const value = entry.value;
+    if (type && value.trim() && !(type === 'boolean' ? /^(true|false)$/.test(value)
+      : /^[1-9]\d*$/.test(value) && Number(value) <= 65535)) {
+      findings.push({ code: 'type', role: 'env', key, line: entry.lines.at(-1), expected: type });
+    }
   }
   return { required: example.settings.size - optionalKeys.size, findings };
 }
@@ -91,7 +103,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', '']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', '']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -109,7 +121,13 @@ export function checkCommand(args) {
   if (optional.some(key => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) || new Set(optional).size !== optional.length) {
     throw new CheckInputError('Optional keys must be unique valid names separated by commas.');
   }
-  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional });
+  const types = new Map();
+  for (const rule of options.get('--types') ? options.get('--types').split(',') : []) {
+    const match = /^([A-Za-z_][A-Za-z0-9_]*):(boolean|port)$/.exec(rule);
+    if (!match || types.has(match[1])) throw new CheckInputError('Types must be unique KEY:boolean or KEY:port rules separated by commas.');
+    types.set(match[1], match[2]);
+  }
+  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types });
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({
@@ -129,6 +147,7 @@ export function checkCommand(args) {
     if (code === 'duplicate') output.push(`DUPLICATE ${role}: ${key} (lines ${lines.join(', ')})`);
     if (code === 'missing') output.push(`MISSING env: ${key}`);
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);
+    if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);
     if (code === 'no-requirements') output.push('INVALID example: no settings defined; add the required keys.');
   }
   output.push(report.findings.length
