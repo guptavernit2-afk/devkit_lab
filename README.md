@@ -44,6 +44,11 @@ and limitations. A pass checks file structure; it does not verify credentials.
 Use `devkit check --format json` for a machine-readable report in scripts and CI.
 It includes finding codes and line numbers, with settings values kept hidden.
 
+Policies are opt-in: `--optional KEY1,KEY2`, `--types DEBUG:boolean,PORT:port`,
+`--references check`, and `--extras error`. See the [checker guide](docs/setup-checker.md)
+for rules and limitations. Try `npm run test:demo` for an end-to-end CI demo, or
+follow the [CI integration guide](docs/ci.md) to gate your own setup checks.
+
 ## Supporting developer tools
 
 - [Base64 text conversion](docs/base64.md)

@@ -7,7 +7,8 @@
   "bin": { "devkit": "./bin/devkit.js" },
   "scripts": {
     "start": "node bin/devkit.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:demo": "node scripts/verify-setup-demo.js"
   },
   "engines": { "node": ">=22" }
 }

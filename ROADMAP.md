@@ -13,13 +13,15 @@ PR and commit counts are secondary to useful, reliable behavior.
 - Read UTF-8 files locally, without modifying files or the shell environment.
 - Return useful CI exit codes and include broken and corrected demo files.
 - Emit versioned JSON reports for scripts and CI without exposing values.
+- Support optional settings, explicit boolean/port rules, and unexpected-key checks.
+- Detect direct missing/empty variable references without expanding values.
+- Demonstrate CI integration with passing and deliberately broken dummy fixtures.
 
 ## Next, in priority order
 
-1. Explicit optional settings and type rules, including boolean and port checks.
-2. Detect unresolved variable references without executing or expanding shell code.
-3. A documented GitHub Actions example using dummy fixtures and private inputs.
-4. Better dotenv compatibility, starting with clearly specified multiline values.
+1. Better dotenv compatibility, starting with clearly specified multiline values.
+2. Detect reference cycles and distinguish unsupported reference syntax.
+3. File-based policy configuration for larger projects, with safe diagnostics.
 
 ## Later, after feedback
 
