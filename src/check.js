@@ -6,6 +6,7 @@ Compare .env.example with .env (the default paths).
 Report missing settings, empty values, and duplicate keys without printing values.
 All keys in the example are required. Files are read locally and never changed.
 Output defaults to text; --format json emits a versioned report without values.
+Options: --optional KEY1,KEY2 allows listed example keys to be absent.
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -54,9 +55,13 @@ export function parseSettings(source) {
   return { settings, invalidLines };
 }
 
-export function inspectSettings(exampleText, envText) {
+export function inspectSettings(exampleText, envText, { optional = [] } = {}) {
   const example = parseSettings(exampleText);
   const actual = parseSettings(envText);
+  const optionalKeys = new Set(optional);
+  for (const key of optionalKeys) {
+    if (!example.settings.has(key)) throw new CheckInputError('Optional keys must be defined in the example file.');
+  }
   const findings = [];
   for (const [role, parsed] of [['example', example], ['env', actual]]) {
     for (const line of parsed.invalidLines) {
@@ -68,12 +73,12 @@ export function inspectSettings(exampleText, envText) {
   }
   if (example.settings.size === 0) findings.push({ code: 'no-requirements', role: 'example' });
   for (const key of example.settings.keys()) {
-    if (!actual.settings.has(key)) findings.push({ code: 'missing', role: 'env', key });
+    if (!optionalKeys.has(key) && !actual.settings.has(key)) findings.push({ code: 'missing', role: 'env', key });
   }
   for (const [key, entry] of actual.settings) {
     if (!entry.value.trim()) findings.push({ code: 'empty', role: 'env', key, line: entry.lines.at(-1) });
   }
-  return { required: example.settings.size, findings };
+  return { required: example.settings.size - optionalKeys.size, findings };
 }
 
 function readSettings(path, role) {
@@ -86,7 +91,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', '']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -100,7 +105,11 @@ export function checkCommand(args) {
   if (!['text', 'json'].includes(options.get('--format'))) {
     throw new CheckInputError('Format must be text or json.');
   }
-  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'));
+  const optional = options.get('--optional') ? options.get('--optional').split(',') : [];
+  if (optional.some(key => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) || new Set(optional).size !== optional.length) {
+    throw new CheckInputError('Optional keys must be unique valid names separated by commas.');
+  }
+  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional });
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({

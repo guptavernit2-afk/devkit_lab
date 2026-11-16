@@ -90,6 +90,14 @@ credential validity. Use an explicit example file listing only required keys.
 
 ## CI exit codes
 
+### Optional settings
+
+`devkit check --optional ANALYTICS_KEY,EMAIL_FROM` allows those example keys to
+be absent. Names must exist in the example, be unique and case-sensitive, with
+no spaces in the comma-separated list. A typo fails with exit 2. Present optional
+keys must still be non-empty and unique. `required` in JSON counts only required
+keys when this option is used; without it, all example keys remain required.
+
 For scripts and CI integrations, request a JSON report:
 
 ```sh
