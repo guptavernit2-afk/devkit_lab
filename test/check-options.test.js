@@ -49,6 +49,27 @@ test('optional keys may be absent, but present empty or duplicate keys still fai
   assert.deepEqual(JSON.parse(present('--optional', 'B').output).findings.map(f => f.code), ['duplicate', 'empty']);
 });
 
+test('unexpected-key policy catches typos and case differences while retaining permissive defaults', t => {
+  const run = checker(t, 'PORT=\n', 'PORT=3000\nport=private-port\nPORRT=private-typo');
+  assert.equal(run().exitCode, 0);
+  assert.equal(run('--extras', 'allow').exitCode, 0);
+  const result = run('--extras', 'error');
+  assert.equal(result.exitCode, 1);
+  assert.deepEqual(JSON.parse(result.output).findings, [
+    { code: 'unexpected', role: 'env', key: 'port', line: 2 },
+    { code: 'unexpected', role: 'env', key: 'PORRT', line: 3 },
+  ]);
+  assert.doesNotMatch(result.output, /private-port|private-typo/);
+  assert.throws(() => run('--extras', 'guess'), error => error.exitCode === 2);
+});
+
+test('unexpected-key policy accepts optional declared settings and combines with empty and duplicate checks', t => {
+  const declared = checker(t, 'A=\nB=\n', 'A=ok\nB=ready');
+  assert.equal(declared('--optional', 'B', '--extras', 'error').exitCode, 0);
+  const run = checker(t, 'A=\n', 'A=ready\nEXTRA=first\nEXTRA=');
+  assert.deepEqual(JSON.parse(run('--extras', 'error').output).findings.map(f => f.code), ['duplicate', 'unexpected', 'empty']);
+});
+
 test('reference checks detect missing and empty targets without leaking value fragments', t => {
   const run = checker(t, 'URL=\n', 'URL=secret-prefix-${MISSING_SECRET_NAME}\n');
   assert.equal(run().exitCode, 0);

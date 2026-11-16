@@ -9,6 +9,7 @@ Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --types DEBUG:boolean,PORT:port validates declared types.
          --references check|ignore checks direct references (default: ignore).
+         --extras allow|error rejects undeclared keys (default: allow).
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -59,7 +60,7 @@ export function parseSettings(source) {
   return { settings, invalidLines };
 }
 
-export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), references = false } = {}) {
+export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), references = false, extras = false } = {}) {
   const example = parseSettings(exampleText);
   const actual = parseSettings(envText);
   const optionalKeys = new Set(optional);
@@ -85,6 +86,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!optionalKeys.has(key) && !actual.settings.has(key)) findings.push({ code: 'missing', role: 'env', key });
   }
   for (const [key, entry] of actual.settings) {
+    if (extras && !example.settings.has(key)) findings.push({ code: 'unexpected', role: 'env', key, line: entry.lines.at(-1) });
     if (references && entry.references.some(name => !actual.settings.get(name)?.value.trim())) {
       findings.push({ code: 'unresolved', role: 'env', key, line: entry.lines.at(-1) });
     }
@@ -109,7 +111,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -134,7 +136,8 @@ export function checkCommand(args) {
     types.set(match[1], match[2]);
   }
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
-  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check' });
+  if (!['allow', 'error'].includes(options.get('--extras'))) throw new CheckInputError('Extras must be allow or error.');
+  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error' });
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({
@@ -154,6 +157,7 @@ export function checkCommand(args) {
     if (code === 'duplicate') output.push(`DUPLICATE ${role}: ${key} (lines ${lines.join(', ')})`);
     if (code === 'missing') output.push(`MISSING env: ${key}`);
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);
+    if (code === 'unexpected') output.push(`UNEXPECTED env: ${key} (line ${line}) — not declared in the example.`);
     if (code === 'unresolved') output.push(`UNRESOLVED env: ${key} (line ${line}) — a referenced setting is missing or empty.`);
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);
     if (code === 'no-requirements') output.push('INVALID example: no settings defined; add the required keys.');
