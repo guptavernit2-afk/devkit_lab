@@ -10,6 +10,7 @@ Example keys are required unless optional. Files are read locally and never chan
 Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --config <path> loads policy rules from a JSON file; CLI rules override.
+         --env - or --example - reads one settings input from standard input.
          --types DEBUG:boolean,PORT:port validates declared types.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
@@ -124,9 +125,10 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
 
 function readSettings(path, role) {
   try {
-    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path));
+    if (path === '-' && process.stdin.isTTY) throw new Error();
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path === '-' ? 0 : path));
   } catch {
-    throw new CheckInputError(`Cannot read ${role} settings file as UTF-8. Check the path, permissions, and encoding.`);
+    throw new CheckInputError(`Cannot read ${role} settings as UTF-8. Check the path, permissions, encoding, or piped input.`);
   }
 }
 
@@ -161,6 +163,7 @@ export function checkCommand(args) {
   }
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
   if (!['allow', 'error'].includes(options.get('--extras'))) throw new CheckInputError('Extras must be allow or error.');
+  if (options.get('--example') === '-' && options.get('--env') === '-') throw new CheckInputError('Only one settings input can use standard input.');
   const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error' });
   if (options.get('--format') === 'json') {
     return {
