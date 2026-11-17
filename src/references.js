@@ -52,4 +52,3 @@ export function inspectReferences(value) {
   }
   return { references, unsupported };
 }
-
