@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { cycleMembers } from './references.js';
+import { cycleMembers, inspectReferences } from './references.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -70,9 +70,8 @@ export function parseSettings(source) {
     }
     const key = match[1];
     const previous = settings.get(key);
-    const references = raw.trim().startsWith("'") ? []
-      : [...value.matchAll(/(?<!\\)\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g)].map(match => match[1]);
-    settings.set(key, { value, references, lines: [...(previous?.lines ?? []), startLine] });
+    const referenceInfo = raw.trim().startsWith("'") ? { references: [], unsupported: false } : inspectReferences(value);
+    settings.set(key, { value, ...referenceInfo, lines: [...(previous?.lines ?? []), startLine] });
   }
   return { settings, invalidLines };
 }
@@ -104,6 +103,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!optionalKeys.has(key) && !actual.settings.has(key)) findings.push({ code: 'missing', role: 'env', key });
   }
   for (const [key, entry] of actual.settings) {
+    if (references && entry.unsupported) findings.push({ code: 'unsupported-reference', role: 'env', key, line: entry.lines.at(-1) });
     if (cycles.has(key)) findings.push({ code: 'cycle', role: 'env', key, line: entry.lines.at(-1) });
     if (extras && !example.settings.has(key)) findings.push({ code: 'unexpected', role: 'env', key, line: entry.lines.at(-1) });
     if (references && entry.references.some(name => !actual.settings.get(name)?.value.trim())) {
@@ -177,6 +177,7 @@ export function checkCommand(args) {
     if (code === 'missing') output.push(`MISSING env: ${key}`);
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);
     if (code === 'cycle') output.push(`CYCLE env: ${key} (line ${line}) — circular setting reference.`);
+    if (code === 'unsupported-reference') output.push(`UNSUPPORTED REFERENCE env: ${key} (line ${line}) — use braced names or single-quote literal text.`);
     if (code === 'unexpected') output.push(`UNEXPECTED env: ${key} (line ${line}) — not declared in the example.`);
     if (code === 'unresolved') output.push(`UNRESOLVED env: ${key} (line ${line}) — a referenced setting is missing or empty.`);
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);

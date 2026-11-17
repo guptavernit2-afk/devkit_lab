@@ -82,7 +82,7 @@ PATH_VALUE='literal\path'
 - UTF-8 with one leading BOM and Windows or Unix line endings is accepted.
 - Backtick quoting and shell commands are unsupported.
   Files are never executed. Variable references such as `${OTHER_KEY}` remain
-  literal text; V1 does not resolve references or verify whether they exist.
+  literal text; opt-in reference checks verify dependencies without expanding them.
 
 This is a documented subset rather than a replacement for every dotenv loader.
 By default it checks presence, emptiness, duplicates, and syntax. Optional
@@ -108,8 +108,9 @@ preserves previous behavior. Single-quoted literal values, comments, and
 backslash-escaped references are ignored. Shell variables are never consulted.
 The `unresolved` finding includes only `role`, `key`, and `line`; referenced names
 and surrounding text are omitted. Values are never expanded. This is a direct
-presence check: recursive expansion, `$NAME`, and `${NAME:-fallback}`
-syntax are not analyzed. Type rules check literal values, not expanded results.
+presence check without recursive expansion. Unsupported `$NAME` and
+`${NAME:-fallback}` syntax produces a finding. Type rules check literal values,
+not expanded results.
 
 Reference checks also detect circular dependencies, including self references.
 Each participating key receives a `cycle` finding with its declaration line;
@@ -178,3 +179,9 @@ the checker never uploads them. It is a preflight check, not a complete
 deployment or security audit.
 
 Quoted values can span physical lines. CRLF is normalized to LF inside values. Comments and assignments inside quotes remain literal content. Findings use the opening declaration line; unterminated quotes consume the remaining input and produce a syntax finding without exposing contents.
+
+With `--references check`, bare `$NAME`, shell substitutions, fallback expressions
+such as `${NAME:-default}`, and malformed braced references produce
+`unsupported-reference`. Only the owning key and line are reported. Single-quote
+literal text or escape a dollar to opt out; ordinary dollar amounts remain literal.
+The checker never runs shell expressions or evaluates fallback values.

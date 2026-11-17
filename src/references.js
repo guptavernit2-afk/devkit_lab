@@ -33,3 +33,22 @@ export function cycleMembers(settings) {
   }
   return cyclic;
 }
+// Only ${NAME} is supported. Literal dollars and escaped tokens are harmless.
+export function inspectReferences(value) {
+  const references = [];
+  let unsupported = false;
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === '\\') { i++; continue; }
+    if (value[i] !== '$') continue;
+    if (value[i + 1] === '{') {
+      const end = value.indexOf('}', i + 2);
+      const name = value.slice(i + 2, end === -1 ? undefined : end);
+      if (end !== -1 && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) references.push(name);
+      else unsupported = true;
+      i = end === -1 ? value.length : end;
+    } else if (/[A-Za-z_(]/.test(value[i + 1] ?? '')) {
+      unsupported = true;
+    }
+  }
+  return { references, unsupported };
+}
