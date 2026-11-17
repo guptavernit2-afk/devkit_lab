@@ -15,3 +15,8 @@ test('acyclic shared dependencies and deep chains do not overflow', () => {
   assert.equal(cycleMembers(settings).size, 0);
   assert.equal(inspectSettings('A=\nB=\nC=', 'A=${C}\nB=${C}\nC=ok', { references: true }).findings.length, 0);
 });
+
+test('all members of overlapping cycles are reported', () => {
+  const report = inspectSettings('A=\nB=\nC=', 'A=${B}${C}\nB=${A}\nC=${B}', { references: true });
+  assert.deepEqual(report.findings.map(f => f.key), ['A', 'B', 'C']);
+});
