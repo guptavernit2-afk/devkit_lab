@@ -16,16 +16,22 @@ PR and commit counts are secondary to useful, reliable behavior.
 - Support optional settings, explicit boolean/port rules, and unexpected-key checks.
 - Detect direct missing/empty variable references without expanding values.
 - Demonstrate CI integration with passing and deliberately broken dummy fixtures.
+- Support quoted multiline settings with opening-line diagnostics.
+- Detect reference cycles and report unsupported reference expressions.
+- Load versioned JSON policies with explicit CLI overrides and safe errors.
+- Read one settings input from stdin for generated configurations.
+- Offer an opt-in Node.js production profile with documented DEBUG conventions.
 
 ## Next, in priority order
 
-1. Better dotenv compatibility, starting with clearly specified multiline values.
-2. Detect reference cycles and distinguish unsupported reference syntax.
-3. File-based policy configuration for larger projects, with safe diagnostics.
+1. Exercise the checker against real project setup flows and turn reported gaps
+   into regression fixtures (using dummy values only).
+2. Improve actionable remediation guidance for each finding without exposing values.
+3. Add project-specific validation rules based on those real setup needs.
 
 ## Later, after feedback
 
-- An explicit deployment profile that can flag development-only settings.
+- Additional deployment profiles once concrete framework requirements are known.
 - A local visual interface using the same checker, after the CLI is reliable.
 
 ## Existing supporting utilities
