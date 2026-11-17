@@ -185,3 +185,26 @@ such as `${NAME:-default}`, and malformed braced references produce
 `unsupported-reference`. Only the owning key and line are reported. Single-quote
 literal text or escape a dollar to opt out; ordinary dollar amounts remain literal.
 The checker never runs shell expressions or evaluates fallback values.
+
+### Save project rules in a policy file
+
+Run `devkit check --config devkit-policy.json` with this versioned JSON file:
+
+```json
+{
+  "schemaVersion": 1,
+  "optional": ["ANALYTICS_KEY"],
+  "types": { "PORT": "port", "DEBUG": "boolean" },
+  "references": "check",
+  "extras": "error"
+}
+```
+
+All fields except `schemaVersion` are optional. Optional/type names must exist in
+`.env.example`. Unknown fields, invalid types, malformed JSON, or unreadable files
+fail with exit 2 without echoing file contents. Files must be UTF-8 (BOM accepted).
+Only an explicitly supplied config is loaded; no parent-directory search occurs.
+CLI rules override the corresponding entire config rule regardless of argument
+order. For example, `--extras allow` overrides the file's extra-key restriction.
+Paths remain CLI options relative to the current working directory. Keep actual
+settings and credentials out of the policy; it contains names and rules only.

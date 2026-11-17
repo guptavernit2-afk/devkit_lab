@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { cycleMembers, inspectReferences } from './references.js';
+import { loadPolicy } from './policy.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -8,6 +9,7 @@ Report missing settings, empty values, and duplicate keys without printing value
 Example keys are required unless optional. Files are read locally and never changed.
 Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
+         --config <path> loads policy rules from a JSON file; CLI rules override.
          --types DEBUG:boolean,PORT:port validates declared types.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
@@ -130,7 +132,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', '']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -140,6 +142,9 @@ export function checkCommand(args) {
     }
     options.set(flag, value);
     seen.add(flag);
+  }
+  if (options.get('--config')) {
+    for (const [flag, value] of loadPolicy(options.get('--config'))) if (!seen.has(flag)) options.set(flag, value);
   }
   if (!['text', 'json'].includes(options.get('--format'))) {
     throw new CheckInputError('Format must be text or json.');
