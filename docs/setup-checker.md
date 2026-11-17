@@ -178,3 +178,9 @@ the checker never uploads them. It is a preflight check, not a complete
 deployment or security audit.
 
 Quoted values can span physical lines. CRLF is normalized to LF inside values. Comments and assignments inside quotes remain literal content. Findings use the opening declaration line; unterminated quotes consume the remaining input and produce a syntax finding without exposing contents.
+
+With `--references check`, bare `$NAME`, shell substitutions, fallback expressions
+such as `${NAME:-default}`, and malformed braced references produce
+`unsupported-reference`. Only the owning key and line are reported. Single-quote
+literal text or escape a dollar to opt out; ordinary dollar amounts remain literal.
+The checker never runs shell expressions or evaluates fallback values.
