@@ -59,7 +59,7 @@ test('duplicates in either file fail even with identical values, including proto
 
 test('malformed declarations and unsupported multiline quotes are flagged without source contents', () => {
   const parsed = parseSettings('GOOD=yes\nBAD-NAME=secret\nNO_EQUALS_SECRET\nA="secret\nB="value"trailing-secret\n9KEY=secret\nBACKTICK=`secret`\n');
-  assert.deepEqual(parsed.invalidLines, [2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(parsed.invalidLines, [2, 3, 4, 6, 7]);
   const report = inspectSettings('A=\n', 'A="secret\n');
   assert.ok(report.findings.some(f => f.code === 'invalid'));
   assert.doesNotMatch(JSON.stringify(report), /secret/);

@@ -43,19 +43,35 @@ export function parseSettings(source) {
   const settings = new Map();
   const invalidLines = [];
   const lines = source.replace(/^\uFEFF/, '').split(/\r\n|\n|\r/);
-  for (const [index, line] of lines.entries()) {
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+    const startLine = index + 1;
     if (/^\s*(?:#.*)?$/.test(line)) continue;
     const match = /^[ \t]*(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)[ \t]*=(.*)$/.exec(line);
-    const value = match ? parseValue(match[2]) : null;
+    let raw = match?.[2];
+    if (raw && /^[ \t]*['"]/.test(raw)) {
+      const quote = raw.trimStart()[0];
+      let closed = false;
+      while (!closed) {
+        const text = raw.trimStart();
+        for (let i = 1; i < text.length; i++) {
+          if (quote === '"' && text[i] === '\\') { i++; continue; }
+          if (text[i] === quote) { closed = true; break; }
+        }
+        if (closed || index + 1 >= lines.length) break;
+        raw += '\n' + lines[++index];
+      }
+    }
+    const value = match ? parseValue(raw) : null;
     if (!match || value === null) {
-      invalidLines.push(index + 1);
+      invalidLines.push(startLine);
       continue;
     }
     const key = match[1];
     const previous = settings.get(key);
-    const references = match[2].trim().startsWith("'") ? []
+    const references = raw.trim().startsWith("'") ? []
       : [...value.matchAll(/(?<!\\)\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g)].map(match => match[1]);
-    settings.set(key, { value, references, lines: [...(previous?.lines ?? []), index + 1] });
+    settings.set(key, { value, references, lines: [...(previous?.lines ?? []), startLine] });
   }
   return { settings, invalidLines };
 }
@@ -153,7 +169,7 @@ export function checkCommand(args) {
   const output = ['devkit-lab — project setup check', ''];
   for (const finding of report.findings) {
     const { code, role, key, line, lines } = finding;
-    if (code === 'invalid') output.push(`INVALID ${role}: line ${line} — expected a single-line KEY=value declaration.`);
+    if (code === 'invalid') output.push(`INVALID ${role}: line ${line} — expected a valid KEY=value declaration.`);
     if (code === 'duplicate') output.push(`DUPLICATE ${role}: ${key} (lines ${lines.join(', ')})`);
     if (code === 'missing') output.push(`MISSING env: ${key}`);
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);

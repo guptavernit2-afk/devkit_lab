@@ -64,7 +64,7 @@ omitted, including in error messages.
 
 ## Supported file syntax
 
-V1 supports single-line declarations:
+Settings support single-line and quoted multiline declarations:
 
 ```dotenv
 # Comments and blank lines are allowed.
@@ -80,7 +80,7 @@ PATH_VALUE='literal\path'
 - Single-quoted values are literal. Double quotes support `\n`, `\r`, `\t`,
   `\"`, and `\\`; unknown backslash sequences are preserved.
 - UTF-8 with one leading BOM and Windows or Unix line endings is accepted.
-- Multiline quoted values, backtick quoting, and shell commands are unsupported.
+- Backtick quoting and shell commands are unsupported.
   Files are never executed. Variable references such as `${OTHER_KEY}` remain
   literal text; V1 does not resolve references or verify whether they exist.
 
@@ -171,3 +171,6 @@ the exit code before attempting to parse stdout. Help remains readable text.
 The same command can fail a CI job. Provide files through your own CI setup;
 the checker never uploads them. It is a preflight check, not a complete
 deployment or security audit.
+
+Quoted values can span physical lines. CRLF is normalized to LF inside values. Comments and assignments inside quotes remain literal content. Findings use the opening declaration line; unterminated quotes consume the remaining input and produce a syntax finding without exposing contents.
+
