@@ -208,3 +208,15 @@ CLI rules override the corresponding entire config rule regardless of argument
 order. For example, `--extras allow` overrides the file's extra-key restriction.
 Paths remain CLI options relative to the current working directory. Keep actual
 settings and credentials out of the policy; it contains names and rules only.
+
+### Check a piped settings file
+
+Use `--env -` (or `--example -`) to read that input from stdin. For example,
+on a POSIX shell: `cat generated.env | node bin/devkit.js check --env -`.
+On PowerShell: `Get-Content -Raw generated.env | node bin/devkit.js check --env -`.
+This also lets another tool stream generated settings directly into the checker.
+Only one settings input may use `-`; both at once fail with exit 2. A real file
+named `-` can be selected with `./-`. Interactive terminal input is rejected;
+use a pipe or redirection. Input must be UTF-8 and is read into memory, never
+written to disk by the checker. Empty stdin is checked as an empty file. Reports
+and exit codes are identical to file inputs, and values stay hidden.
