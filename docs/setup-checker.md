@@ -108,8 +108,13 @@ preserves previous behavior. Single-quoted literal values, comments, and
 backslash-escaped references are ignored. Shell variables are never consulted.
 The `unresolved` finding includes only `role`, `key`, and `line`; referenced names
 and surrounding text are omitted. Values are never expanded. This is a direct
-presence check: recursive expansion, cycles, `$NAME`, and `${NAME:-fallback}`
+presence check: recursive expansion, `$NAME`, and `${NAME:-fallback}`
 syntax are not analyzed. Type rules check literal values, not expanded results.
+
+Reference checks also detect circular dependencies, including self references.
+Each participating key receives a `cycle` finding with its declaration line;
+values and dependency paths are not printed. A key merely pointing into a cycle
+is not itself reported as a cycle member. Values are never expanded.
 
 ### Explicit types
 

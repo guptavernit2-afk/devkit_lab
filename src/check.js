@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { cycleMembers } from './references.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -89,6 +90,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!example.settings.has(key)) throw new CheckInputError('Optional keys must be defined in the example file.');
   }
   const findings = [];
+  const cycles = references ? cycleMembers(actual.settings) : new Set();
   for (const [role, parsed] of [['example', example], ['env', actual]]) {
     for (const line of parsed.invalidLines) {
       findings.push({ code: 'invalid', role, line });
@@ -102,6 +104,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!optionalKeys.has(key) && !actual.settings.has(key)) findings.push({ code: 'missing', role: 'env', key });
   }
   for (const [key, entry] of actual.settings) {
+    if (cycles.has(key)) findings.push({ code: 'cycle', role: 'env', key, line: entry.lines.at(-1) });
     if (extras && !example.settings.has(key)) findings.push({ code: 'unexpected', role: 'env', key, line: entry.lines.at(-1) });
     if (references && entry.references.some(name => !actual.settings.get(name)?.value.trim())) {
       findings.push({ code: 'unresolved', role: 'env', key, line: entry.lines.at(-1) });
@@ -173,6 +176,7 @@ export function checkCommand(args) {
     if (code === 'duplicate') output.push(`DUPLICATE ${role}: ${key} (lines ${lines.join(', ')})`);
     if (code === 'missing') output.push(`MISSING env: ${key}`);
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);
+    if (code === 'cycle') output.push(`CYCLE env: ${key} (line ${line}) — circular setting reference.`);
     if (code === 'unexpected') output.push(`UNEXPECTED env: ${key} (line ${line}) — not declared in the example.`);
     if (code === 'unresolved') output.push(`UNRESOLVED env: ${key} (line ${line}) — a referenced setting is missing or empty.`);
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);
