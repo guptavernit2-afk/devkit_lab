@@ -173,4 +173,3 @@ the checker never uploads them. It is a preflight check, not a complete
 deployment or security audit.
 
 Quoted values can span physical lines. CRLF is normalized to LF inside values. Comments and assignments inside quotes remain literal content. Findings use the opening declaration line; unterminated quotes consume the remaining input and produce a syntax finding without exposing contents.
-
