@@ -14,6 +14,7 @@ Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --types DEBUG:boolean,PORT:port validates declared types.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
+         --profile none|node-production enables explicit deployment rules.
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -79,7 +80,8 @@ export function parseSettings(source) {
   return { settings, invalidLines };
 }
 
-export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), references = false, extras = false } = {}) {
+export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), references = false, extras = false, profile = 'none' } = {}) {
+  if (!['none', 'node-production'].includes(profile)) throw new CheckInputError('Profile must be none or node-production.');
   const example = parseSettings(exampleText);
   const actual = parseSettings(envText);
   const optionalKeys = new Set(optional);
@@ -120,6 +122,14 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
       findings.push({ code: 'type', role: 'env', key, line: entry.lines.at(-1), expected: type });
     }
   }
+  if (profile === 'node-production') {
+    for (const [key, expected, required] of [['NODE_ENV', 'production', true], ['DEBUG', 'false', false]]) {
+      const entry = actual.settings.get(key);
+      if ((!entry && required) || (entry && entry.value !== expected)) {
+        findings.push({ code: 'profile', role: 'env', key, ...(entry ? { line: entry.lines.at(-1) } : {}), profile });
+      }
+    }
+  }
   return { required: example.settings.size - optionalKeys.size, findings };
 }
 
@@ -134,7 +144,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', '']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', ''], ['--profile', 'none']]);
   const seen = new Set();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
@@ -163,8 +173,9 @@ export function checkCommand(args) {
   }
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
   if (!['allow', 'error'].includes(options.get('--extras'))) throw new CheckInputError('Extras must be allow or error.');
+  if (!['none', 'node-production'].includes(options.get('--profile'))) throw new CheckInputError('Profile must be none or node-production.');
   if (options.get('--example') === '-' && options.get('--env') === '-') throw new CheckInputError('Only one settings input can use standard input.');
-  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error' });
+  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error', profile: options.get('--profile') });
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({
@@ -186,6 +197,7 @@ export function checkCommand(args) {
     if (code === 'empty') output.push(`EMPTY env: ${key} (line ${line})`);
     if (code === 'cycle') output.push(`CYCLE env: ${key} (line ${line}) — circular setting reference.`);
     if (code === 'unsupported-reference') output.push(`UNSUPPORTED REFERENCE env: ${key} (line ${line}) — use braced names or single-quote literal text.`);
+    if (code === 'profile') output.push(`PROFILE env: ${key}${line ? ` (line ${line})` : ''} — ${finding.profile} requires NODE_ENV=production and DEBUG=false when DEBUG is present.`);
     if (code === 'unexpected') output.push(`UNEXPECTED env: ${key} (line ${line}) — not declared in the example.`);
     if (code === 'unresolved') output.push(`UNRESOLVED env: ${key} (line ${line}) — a referenced setting is missing or empty.`);
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);

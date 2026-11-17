@@ -49,6 +49,12 @@ Policies are opt-in: `--optional KEY1,KEY2`, `--types DEBUG:boolean,PORT:port`,
 for rules and limitations. Try `npm run test:demo` for an end-to-end CI demo, or
 follow the [CI integration guide](docs/ci.md) to gate your own setup checks.
 
+Save shared rules with `--config devkit-policy.json`, check piped settings with
+`--env -`, or opt into `--profile node-production` for projects that require
+`NODE_ENV=production` and treat `DEBUG` as a boolean. Quoted multiline values and
+opt-in reference-cycle diagnostics are supported. See the checker guide for
+policy examples and the precise limits of each check.
+
 ## Supporting developer tools
 
 - [Base64 text conversion](docs/base64.md)

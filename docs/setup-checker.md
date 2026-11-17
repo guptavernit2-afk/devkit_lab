@@ -87,8 +87,9 @@ PATH_VALUE='literal\path'
 This is a documented subset rather than a replacement for every dotenv loader.
 By default it checks presence, emptiness, duplicates, and syntax. Optional
 settings, boolean/port types, direct references, and unexpected keys can be
-checked with the policies below. URLs, production debug rules, recursive
-references, and credential validity are not validated.
+checked with the policies below. URLs, recursively expanded values, and
+credential validity are not validated. Production conventions require opting in
+to the explicit profile described below.
 
 ## CI exit codes
 
@@ -220,3 +221,20 @@ named `-` can be selected with `./-`. Interactive terminal input is rejected;
 use a pipe or redirection. Input must be UTF-8 and is read into memory, never
 written to disk by the checker. Empty stdin is checked as an empty file. Reports
 and exit codes are identical to file inputs, and values stay hidden.
+
+### Opt into Node.js production conventions
+
+Use `devkit check --profile node-production`, or add
+`"profile": "node-production"` to your policy JSON. This requires `NODE_ENV` to
+exist with the exact literal value `production`. If `DEBUG` is present, it must
+be exactly `false`. Absent `DEBUG` is allowed by the profile, but your example
+file still controls whether it is required. Optional keys cannot waive profile
+requirements. Values are never expanded or read from the shell environment.
+
+These are explicit project conventions, not universal rules for every Node.js
+library: only opt in if your app treats `DEBUG` as a boolean. The profile does
+not inspect application code or guarantee deployment security. Default `none`
+preserves local development behavior; `--profile none` overrides a policy file.
+Failures use JSON code `profile`, with the owning key, profile name, and line
+when present. Existing empty/missing/type checks may also report the same key.
+Declare `NODE_ENV` in the example when combining with `--extras error`.
