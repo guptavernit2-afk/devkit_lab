@@ -276,3 +276,8 @@ preserves the original output shape. Hints contain fixed instructions and never
 include setting values, reference targets, or permitted policy choices. They
 suggest manual changes; the checker does not edit files. Use finding codes for
 automation, since human-readable wording may improve over time.
+
+Reference escapes are interpreted from the original value before double-quoted
+backslash decoding. An odd number of backslashes immediately before `$` escapes
+it; an even number leaves the reference active. Single-quoted values remain
+literal. Trailing comments are never scanned for references.

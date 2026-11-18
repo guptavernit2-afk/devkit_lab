@@ -30,13 +30,16 @@ function parseValue(source) {
   const text = source.trim();
   const quote = text[0];
   if (quote === '`') return null;
-  if (quote !== '"' && quote !== "'") return text.split('#')[0].trim();
+  if (quote !== '"' && quote !== "'") {
+    const value = text.split('#')[0].trim();
+    return { value, referenceSource: value, literal: false };
+  }
   let value = '';
   for (let i = 1; i < text.length; i++) {
     const char = text[i];
     if (char === quote) {
       if (!/^[ \t]*(?:#.*)?$/.test(text.slice(i + 1))) return null;
-      return value;
+      return { value, referenceSource: text.slice(1, i), literal: quote === "'" };
     }
     if (quote === '"' && char === '\\' && i + 1 < text.length) {
       const next = text[++i];
@@ -71,15 +74,15 @@ export function parseSettings(source) {
         raw += '\n' + lines[++index];
       }
     }
-    const value = match ? parseValue(raw) : null;
-    if (!match || value === null) {
+    const parsed = match ? parseValue(raw) : null;
+    if (!match || parsed === null) {
       invalidLines.push(startLine);
       continue;
     }
     const key = match[1];
     const previous = settings.get(key);
-    const referenceInfo = raw.trim().startsWith("'") ? { references: [], unsupported: false } : inspectReferences(value);
-    settings.set(key, { value, ...referenceInfo, lines: [...(previous?.lines ?? []), startLine] });
+    const referenceInfo = parsed.literal ? { references: [], unsupported: false } : inspectReferences(parsed.referenceSource);
+    settings.set(key, { value: parsed.value, ...referenceInfo, lines: [...(previous?.lines ?? []), startLine] });
   }
   return { settings, invalidLines };
 }
