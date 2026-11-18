@@ -63,16 +63,21 @@ export function parseSettings(source) {
     let raw = match?.[2];
     if (raw && /^[ \t]*['"]/.test(raw)) {
       const quote = raw.trimStart()[0];
+      const chunks = [raw];
+      let text = raw.trimStart();
+      let offset = 1;
       let closed = false;
       while (!closed) {
-        const text = raw.trimStart();
-        for (let i = 1; i < text.length; i++) {
+        for (let i = offset; i < text.length; i++) {
           if (quote === '"' && text[i] === '\\') { i++; continue; }
           if (text[i] === quote) { closed = true; break; }
         }
         if (closed || index + 1 >= lines.length) break;
-        raw += '\n' + lines[++index];
+        text = lines[++index];
+        chunks.push(text);
+        offset = 0;
       }
+      raw = chunks.join('\n');
     }
     const parsed = match ? parseValue(raw) : null;
     if (!match || parsed === null) {
