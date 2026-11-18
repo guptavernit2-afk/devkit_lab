@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { settingTypes } from './types.js';
 
 const name = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -10,7 +11,7 @@ export function loadPolicy(path) {
     const policy = JSON.parse(text);
     if (!object(policy) || policy.schemaVersion !== 1 || Object.keys(policy).some(key => !['schemaVersion', 'optional', 'types', 'references', 'extras', 'profile'].includes(key))) throw new Error();
     if (policy.optional !== undefined && (!Array.isArray(policy.optional) || policy.optional.some(key => typeof key !== 'string' || !name.test(key)) || new Set(policy.optional).size !== policy.optional.length)) throw new Error();
-    if (policy.types !== undefined && (!object(policy.types) || Object.entries(policy.types).some(([key, type]) => !name.test(key) || !['boolean', 'port'].includes(type)))) throw new Error();
+    if (policy.types !== undefined && (!object(policy.types) || Object.entries(policy.types).some(([key, type]) => !name.test(key) || !settingTypes.includes(type)))) throw new Error();
     if (policy.references !== undefined && !['check', 'ignore'].includes(policy.references)) throw new Error();
     if (policy.extras !== undefined && !['allow', 'error'].includes(policy.extras)) throw new Error();
     if (policy.profile !== undefined && !['none', 'node-production'].includes(policy.profile)) throw new Error();
