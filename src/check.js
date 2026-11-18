@@ -3,6 +3,7 @@ import { cycleMembers, inspectReferences } from './references.js';
 import { loadPolicy } from './policy.js';
 import { settingTypes, matchesType } from './types.js';
 import { validChoices } from './allowed.js';
+import { findingHint } from './hints.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -17,6 +18,7 @@ Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
          --profile none|node-production enables explicit deployment rules.
+         --explain on|off adds value-free fix guidance (default: off).
 Exit codes: 0 = clean, 1 = findings, 2 = invalid arguments or unreadable files.
 Example: devkit check --example .env.example --env .env.production`;
 
@@ -151,7 +153,7 @@ function readSettings(path, role) {
 
 export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
-  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', ''], ['--profile', 'none']]);
+  const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', ''], ['--profile', 'none'], ['--explain', 'off']]);
   const seen = new Set();
   let allowed = new Map();
   for (let i = 0; i < args.length; i += 2) {
@@ -185,8 +187,10 @@ export function checkCommand(args) {
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
   if (!['allow', 'error'].includes(options.get('--extras'))) throw new CheckInputError('Extras must be allow or error.');
   if (!['none', 'node-production'].includes(options.get('--profile'))) throw new CheckInputError('Profile must be none or node-production.');
+  if (!['on', 'off'].includes(options.get('--explain'))) throw new CheckInputError('Explain must be on or off.');
   if (options.get('--example') === '-' && options.get('--env') === '-') throw new CheckInputError('Only one settings input can use standard input.');
   const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, allowed, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error', profile: options.get('--profile') });
+  if (options.get('--explain') === 'on') report.findings = report.findings.map(finding => ({ ...finding, hint: findingHint(finding) }));
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({
@@ -214,6 +218,7 @@ export function checkCommand(args) {
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);
     if (code === 'allowed') output.push(`ALLOWED env: ${key} (line ${line}) — choose a value permitted by the project policy.`);
     if (code === 'no-requirements') output.push('INVALID example: no settings defined; add the required keys.');
+    if (finding.hint) output.push(`  Fix: ${finding.hint}`);
   }
   output.push(report.findings.length
     ? `\n${report.findings.length} issue(s) found. Setting values are hidden.`
