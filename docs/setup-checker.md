@@ -87,8 +87,8 @@ PATH_VALUE='literal\path'
 This is a documented subset rather than a replacement for every dotenv loader.
 By default it checks presence, emptiness, duplicates, and syntax. Optional
 settings, boolean/port types, direct references, and unexpected keys can be
-checked with the policies below. URLs, recursively expanded values, and
-credential validity are not validated. Production conventions require opting in
+checked with the policies below. Recursively expanded values and credential
+validity are not validated. HTTP endpoint syntax and production conventions require opting in
 to the explicit profile described below.
 
 ## CI exit codes
@@ -123,6 +123,7 @@ is not itself reported as a cycle member. Values are never expanded.
 `devkit check --types DEBUG:boolean,PORT:port` validates selected example keys.
 Boolean values must be exactly `true` or `false`; ports must be decimal integers
 from 1 to 65535 without signs, leading zeros, spaces inside quotes, or exponents.
+The `http-url` type is documented in HTTP endpoint rules below.
 Unknown keys, types, or duplicate rules fail with exit 2. Absent optional keys
 are not type-checked. Empty values produce the existing empty finding.
 Type failures have code `type`, `key`, `role`, `line`, and `expected` in JSON;
