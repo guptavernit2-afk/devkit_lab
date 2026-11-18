@@ -265,3 +265,13 @@ duplicate and type checks still apply; absent optional settings are skipped.
 Allowed rules are config-only (no CLI value lists or override); edit the policy
 to change them. Reports and errors never echo actual values or allowed choices.
 Use these lists for non-secret configuration enums, not credential validation.
+
+### Explain how to fix findings
+
+Add `--explain on` to show a short `Fix:` line after each text finding. In JSON
+mode the same guidance appears as a `hint` field on each finding. Codes, counts,
+line numbers, schema version, and exit status stay unchanged. Default `off`
+preserves the original output shape. Hints contain fixed instructions and never
+include setting values, reference targets, or permitted policy choices. They
+suggest manual changes; the checker does not edit files. Use finding codes for
+automation, since human-readable wording may improve over time.
