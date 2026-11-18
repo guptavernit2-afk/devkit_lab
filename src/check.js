@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { cycleMembers, inspectReferences } from './references.js';
 import { loadPolicy } from './policy.js';
+import { settingTypes, matchesType } from './types.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -11,7 +12,7 @@ Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --config <path> loads policy rules from a JSON file; CLI rules override.
          --env - or --example - reads one settings input from standard input.
-         --types DEBUG:boolean,PORT:port validates declared types.
+         --types DEBUG:boolean,PORT:port,API_URL:http-url validates declared types.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
          --profile none|node-production enables explicit deployment rules.
@@ -86,8 +87,8 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
   const actual = parseSettings(envText);
   const optionalKeys = new Set(optional);
   for (const [key, type] of types) {
-    if (!example.settings.has(key) || !['boolean', 'port'].includes(type)) {
-      throw new CheckInputError('Type rules require example keys and boolean or port types.');
+    if (!example.settings.has(key) || !settingTypes.includes(type)) {
+      throw new CheckInputError('Type rules require example keys and boolean, port, or http-url types.');
     }
   }
   for (const key of optionalKeys) {
@@ -117,8 +118,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!entry.value.trim()) findings.push({ code: 'empty', role: 'env', key, line: entry.lines.at(-1) });
     const type = types.get(key);
     const value = entry.value;
-    if (type && value.trim() && !(type === 'boolean' ? /^(true|false)$/.test(value)
-      : /^[1-9]\d*$/.test(value) && Number(value) <= 65535)) {
+    if (type && value.trim() && !matchesType(value, type)) {
       findings.push({ code: 'type', role: 'env', key, line: entry.lines.at(-1), expected: type });
     }
   }
@@ -167,8 +167,8 @@ export function checkCommand(args) {
   }
   const types = new Map();
   for (const rule of options.get('--types') ? options.get('--types').split(',') : []) {
-    const match = /^([A-Za-z_][A-Za-z0-9_]*):(boolean|port)$/.exec(rule);
-    if (!match || types.has(match[1])) throw new CheckInputError('Types must be unique KEY:boolean or KEY:port rules separated by commas.');
+    const match = /^([A-Za-z_][A-Za-z0-9_]*):(boolean|port|http-url)$/.exec(rule);
+    if (!match || types.has(match[1])) throw new CheckInputError('Types must be unique KEY:boolean, KEY:port, or KEY:http-url rules separated by commas.');
     types.set(match[1], match[2]);
   }
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
