@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { cycleMembers, inspectReferences } from './references.js';
 import { loadPolicy } from './policy.js';
 import { settingTypes, matchesType } from './types.js';
+import { validChoices } from './allowed.js';
 
 const help = `Usage: devkit check [--example <path>] [--env <path>] [--format text|json]
 
@@ -81,11 +82,14 @@ export function parseSettings(source) {
   return { settings, invalidLines };
 }
 
-export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), references = false, extras = false, profile = 'none' } = {}) {
+export function inspectSettings(exampleText, envText, { optional = [], types = new Map(), allowed = new Map(), references = false, extras = false, profile = 'none' } = {}) {
   if (!['none', 'node-production'].includes(profile)) throw new CheckInputError('Profile must be none or node-production.');
   const example = parseSettings(exampleText);
   const actual = parseSettings(envText);
   const optionalKeys = new Set(optional);
+  for (const [key, values] of allowed) {
+    if (!example.settings.has(key) || !validChoices(values)) throw new CheckInputError('Allowed-value rules require example keys and non-empty lists of unique non-blank strings.');
+  }
   for (const [key, type] of types) {
     if (!example.settings.has(key) || !settingTypes.includes(type)) {
       throw new CheckInputError('Type rules require example keys and boolean, port, or http-url types.');
@@ -118,6 +122,9 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
     if (!entry.value.trim()) findings.push({ code: 'empty', role: 'env', key, line: entry.lines.at(-1) });
     const type = types.get(key);
     const value = entry.value;
+    if (allowed.has(key) && value.trim() && !allowed.get(key).includes(value)) {
+      findings.push({ code: 'allowed', role: 'env', key, line: entry.lines.at(-1) });
+    }
     if (type && value.trim() && !matchesType(value, type)) {
       findings.push({ code: 'type', role: 'env', key, line: entry.lines.at(-1), expected: type });
     }
@@ -146,6 +153,7 @@ export function checkCommand(args) {
   if (args.length === 1 && (args[0] === '--help' || args[0] === '-h')) return help;
   const options = new Map([['--example', '.env.example'], ['--env', '.env'], ['--format', 'text'], ['--optional', ''], ['--types', ''], ['--references', 'ignore'], ['--extras', 'allow'], ['--config', ''], ['--profile', 'none']]);
   const seen = new Set();
+  let allowed = new Map();
   for (let i = 0; i < args.length; i += 2) {
     const flag = args[i];
     const value = args[i + 1];
@@ -156,7 +164,10 @@ export function checkCommand(args) {
     seen.add(flag);
   }
   if (options.get('--config')) {
-    for (const [flag, value] of loadPolicy(options.get('--config'))) if (!seen.has(flag)) options.set(flag, value);
+    for (const [flag, value] of loadPolicy(options.get('--config'))) {
+      if (flag === '--allowed') allowed = value;
+      else if (!seen.has(flag)) options.set(flag, value);
+    }
   }
   if (!['text', 'json'].includes(options.get('--format'))) {
     throw new CheckInputError('Format must be text or json.');
@@ -175,7 +186,7 @@ export function checkCommand(args) {
   if (!['allow', 'error'].includes(options.get('--extras'))) throw new CheckInputError('Extras must be allow or error.');
   if (!['none', 'node-production'].includes(options.get('--profile'))) throw new CheckInputError('Profile must be none or node-production.');
   if (options.get('--example') === '-' && options.get('--env') === '-') throw new CheckInputError('Only one settings input can use standard input.');
-  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error', profile: options.get('--profile') });
+  const report = inspectSettings(readSettings(options.get('--example'), 'example'), readSettings(options.get('--env'), 'env'), { optional, types, allowed, references: options.get('--references') === 'check', extras: options.get('--extras') === 'error', profile: options.get('--profile') });
   if (options.get('--format') === 'json') {
     return {
       output: JSON.stringify({
@@ -201,6 +212,7 @@ export function checkCommand(args) {
     if (code === 'unexpected') output.push(`UNEXPECTED env: ${key} (line ${line}) — not declared in the example.`);
     if (code === 'unresolved') output.push(`UNRESOLVED env: ${key} (line ${line}) — a referenced setting is missing or empty.`);
     if (code === 'type') output.push(`TYPE env: ${key} (line ${line}) — expected ${finding.expected}.`);
+    if (code === 'allowed') output.push(`ALLOWED env: ${key} (line ${line}) — choose a value permitted by the project policy.`);
     if (code === 'no-requirements') output.push('INVALID example: no settings defined; add the required keys.');
   }
   output.push(report.findings.length
