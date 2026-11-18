@@ -21,13 +21,16 @@ PR and commit counts are secondary to useful, reliable behavior.
 - Load versioned JSON policies with explicit CLI overrides and safe errors.
 - Read one settings input from stdin for generated configurations.
 - Offer an opt-in Node.js production profile with documented DEBUG conventions.
+- Validate HTTP endpoint syntax and project-specific allowed values.
+- Explain manual fixes with optional text/JSON hints that hide values.
+- Exercise a complete dummy service onboarding flow with file and stdin inputs.
 
 ## Next, in priority order
 
 1. Exercise the checker against real project setup flows and turn reported gaps
    into regression fixtures (using dummy values only).
-2. Improve actionable remediation guidance for each finding without exposing values.
-3. Add project-specific validation rules based on those real setup needs.
+2. Gather feedback on fix hints and improve guidance for ambiguous findings.
+3. Expand validation rules only when concrete project setup needs justify them.
 
 ## Later, after feedback
 

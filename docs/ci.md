@@ -14,6 +14,10 @@ npm run test:demo
 The demonstration failure is asserted inside the script, so the CI job itself
 passes only when both passing and failing behavior are correct.
 
+The [service onboarding example](service-onboarding.md) extends this with a
+versioned policy, HTTP endpoints, allowed values, production rules and fix hints.
+Run `npm run test:service`; it is also covered by the main `npm test` CI matrix.
+
 ## Add a real preflight step
 
 In a checkout containing devkit-lab and your project's example and candidate

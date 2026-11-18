@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "optional": ["ANALYTICS_KEY"],
+  "types": { "DEBUG": "boolean", "PORT": "port", "API_URL": "http-url" },
+  "allowed": { "LOG_LEVEL": ["debug", "info", "warn", "error"] },
+  "references": "check",
+  "extras": "error",
+  "profile": "node-production"
+}

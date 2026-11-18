@@ -55,7 +55,13 @@ Save shared rules with `--config devkit-policy.json`, check piped settings with
 opt-in reference-cycle diagnostics are supported. See the checker guide for
 policy examples and the precise limits of each check.
 
+For a fuller example, follow the [service onboarding walkthrough](docs/service-onboarding.md).
+It combines endpoint validation, allowed log levels, production rules, multiline
+settings, references, and fix hints. Run `npm run test:service` to verify the
+broken-to-corrected workflow locally.
+
 ## Supporting developer tools
+
 
 - [Base64 text conversion](docs/base64.md)
 - [SHA-256 checksums](docs/hash.md)

@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node bin/devkit.js",
     "test": "node --test",
-    "test:demo": "node scripts/verify-setup-demo.js"
+    "test:demo": "node scripts/verify-setup-demo.js",
+    "test:service": "node scripts/verify-service-demo.js"
   },
   "engines": { "node": ">=22" }
 }
