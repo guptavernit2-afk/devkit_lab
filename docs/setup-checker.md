@@ -238,3 +238,14 @@ preserves local development behavior; `--profile none` overrides a policy file.
 Failures use JSON code `profile`, with the owning key, profile name, and line
 when present. Existing empty/missing/type checks may also report the same key.
 Declare `NODE_ENV` in the example when combining with `--extras error`.
+
+### HTTP endpoint rules
+
+Use `--types API_URL:http-url` or `"types": { "API_URL": "http-url" }` in a
+policy file to validate absolute HTTP/HTTPS endpoints. Localhost, IPv6, paths,
+queries, and percent-encoded spaces are supported. Relative URLs, other schemes,
+whitespace, backslashes, embedded credentials, invalid ports, and `${...}`
+interpolation fail. Empty values retain the `empty` finding; absent optional
+settings are skipped. Reports include `expected: "http-url"`, never the URL.
+This is syntax validation only: no DNS, HTTP requests, or availability checks.
+Do not use this type for database connection strings or interpolated endpoints.
