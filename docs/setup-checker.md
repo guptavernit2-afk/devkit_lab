@@ -249,3 +249,19 @@ interpolation fail. Empty values retain the `empty` finding; absent optional
 settings are skipped. Reports include `expected: "http-url"`, never the URL.
 This is syntax validation only: no DNS, HTTP requests, or availability checks.
 Do not use this type for database connection strings or interpolated endpoints.
+
+### Allowed values for project-specific settings
+
+Policy JSON can declare exact choices, for example:
+
+```json
+{ "schemaVersion": 1, "allowed": { "LOG_LEVEL": ["debug", "info", "warn", "error"] } }
+```
+
+Each name must exist in the example. Lists must contain unique, non-blank strings;
+comparisons are case-sensitive with no trimming or variable expansion. Present
+non-empty values outside the list produce `allowed` findings. Missing, empty,
+duplicate and type checks still apply; absent optional settings are skipped.
+Allowed rules are config-only (no CLI value lists or override); edit the policy
+to change them. Reports and errors never echo actual values or allowed choices.
+Use these lists for non-secret configuration enums, not credential validation.
