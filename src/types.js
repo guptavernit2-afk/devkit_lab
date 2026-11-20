@@ -1,6 +1,9 @@
-export const settingTypes = ['boolean', 'port', 'http-url', 'integer'];
+export const settingTypes = ['boolean', 'port', 'http-url', 'integer', 'json'];
 
 export function matchesType(value, type) {
+  if (type === 'json') {
+    try { JSON.parse(value); return true; } catch { return false; }
+  }
   if (type === 'integer') return /^(0|-?[1-9]\d*)$/.test(value) && Number.isSafeInteger(Number(value));
   if (type === 'boolean') return /^(true|false)$/.test(value);
   if (type === 'port') return /^[1-9]\d*$/.test(value) && Number(value) <= 65535;

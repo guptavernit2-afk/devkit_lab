@@ -307,3 +307,19 @@ plus signs, negative zero, leading zeros, and quoted whitespace are rejected.
 This rule validates integer representation, not an application-specific range:
 use allowed-value lists for a small fixed set of choices. Empty/optional behavior
 matches other types, and `--explain on` includes integer-specific guidance.
+
+### JSON inside settings
+
+Use `--types FEATURES:json` or `"types": { "FEATURES": "json" }` in a policy.
+Single-quote the dotenv value to preserve JSON double quotes and backslashes:
+
+```dotenv
+FEATURES='{"checkout":true,"regions":["local"]}'
+```
+
+Multiline JSON is supported inside single quotes. Any valid JSON value is
+accepted, including arrays, strings, numbers, booleans and null. This checks
+syntax only, not an object schema, number precision, or application meaning.
+Single-quoted `${NAME}` text stays literal; no interpolation is performed.
+Invalid JSON receives a normal `type` finding without native parser errors or
+value snippets. Empty and absent optional settings follow existing rules.
