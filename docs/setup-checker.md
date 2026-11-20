@@ -281,3 +281,8 @@ Reference escapes are interpreted from the original value before double-quoted
 backslash decoding. An odd number of backslashes immediately before `$` escapes
 it; an even number leaves the reference active. Single-quoted values remain
 literal. Trailing comments are never scanned for references.
+
+HTTP endpoint rules reject literal ASCII control characters (U+0000 through
+U+001F and U+007F) before URL parsing can discard or encode them. Percent-encoded
+sequences remain allowed: the checker validates syntax, not server-side decoding
+or endpoint safety.

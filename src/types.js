@@ -5,7 +5,7 @@ export function matchesType(value, type) {
   if (type === 'port') return /^[1-9]\d*$/.test(value) && Number(value) <= 65535;
   if (type === 'http-url') {
     // Reject URL-parser repairs, unresolved interpolation, and embedded credentials.
-    if (!/^https?:\/\//i.test(value) || /[\s\\]/.test(value) || value.includes('${')) return false;
+    if (!/^https?:\/\//i.test(value) || /[\s\u0000-\u001f\u007f\\]/.test(value) || value.includes('${')) return false;
     try {
       const url = new URL(value);
       const authority = value.slice(value.indexOf('://') + 3).split(/[/?#]/)[0];
