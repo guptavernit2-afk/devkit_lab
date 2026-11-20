@@ -14,7 +14,7 @@ Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --config <path> loads policy rules from a JSON file; CLI rules override.
          --env - or --example - reads one settings input from standard input.
-         --types KEY:TYPE validates boolean, port, http-url, or integer settings.
+         --types KEY:TYPE validates boolean, port, http-url, integer, or json settings.
          --optional - or --types - clears the corresponding configured rules.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).

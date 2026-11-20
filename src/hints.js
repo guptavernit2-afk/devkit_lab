@@ -12,6 +12,7 @@ const hints = {
   'no-requirements': 'Add at least one KEY=value declaration to the example file.',
 };
 const typeHints = {
+  json: 'Use valid JSON; single-quote the dotenv value to preserve JSON quotes and backslashes. This checks syntax only.',
   integer: 'Use a decimal integer from -9007199254740991 to 9007199254740991, without a plus sign, leading zeros, or exponent notation.',
   boolean: 'Use the literal true or false, in lowercase.',
   port: 'Use a decimal integer from 1 to 65535 without leading zeros.',
