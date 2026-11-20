@@ -43,3 +43,17 @@ test('empty lists and UTF-8 BOM are supported; configured key typos remain error
   writeFileSync(config, JSON.stringify({ schemaVersion: 1, optional: ['TYPO'] }));
   assert.throws(run, error => error.exitCode === 2);
 });
+
+test('CLI can explicitly clear optional and type rules loaded from a policy', t => {
+  const { config, run } = fixture(t);
+  writeFileSync(config, JSON.stringify({ schemaVersion: 1, optional: ['OPTIONAL'], types: { PORT: 'boolean' } }));
+  assert.deepEqual(JSON.parse(run().output).findings.map(f => f.code), ['type']);
+  assert.equal(run('--types', '-').exitCode, 0);
+  const cleared = JSON.parse(run('--optional', '-', '--types', '-').output);
+  assert.deepEqual(cleared.findings.map(f => f.code), ['missing']);
+  assert.equal(cleared.required, 2);
+  for (const args of [['--types', '-,PORT:port'], ['--optional', '-,OPTIONAL'], ['--types', '-', '--types', 'PORT:port']]) {
+    assert.throws(() => run(...args), error => error.exitCode === 2);
+  }
+  assert.equal(checkCommand(['--types', '-', '--optional', '-', '--example', join(config, '..', 'example'), '--env', join(config, '..', 'env')]).exitCode, 1);
+});

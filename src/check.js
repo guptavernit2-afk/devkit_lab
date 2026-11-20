@@ -15,6 +15,7 @@ Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --config <path> loads policy rules from a JSON file; CLI rules override.
          --env - or --example - reads one settings input from standard input.
          --types DEBUG:boolean,PORT:port,API_URL:http-url validates declared types.
+         --optional - or --types - clears the corresponding configured rules.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
          --profile none|node-production enables explicit deployment rules.
@@ -182,12 +183,12 @@ export function checkCommand(args) {
   if (!['text', 'json'].includes(options.get('--format'))) {
     throw new CheckInputError('Format must be text or json.');
   }
-  const optional = options.get('--optional') ? options.get('--optional').split(',') : [];
+  const optional = options.get('--optional') && options.get('--optional') !== '-' ? options.get('--optional').split(',') : [];
   if (optional.some(key => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) || new Set(optional).size !== optional.length) {
     throw new CheckInputError('Optional keys must be unique valid names separated by commas.');
   }
   const types = new Map();
-  for (const rule of options.get('--types') ? options.get('--types').split(',') : []) {
+  for (const rule of options.get('--types') && options.get('--types') !== '-' ? options.get('--types').split(',') : []) {
     const match = /^([A-Za-z_][A-Za-z0-9_]*):(boolean|port|http-url)$/.exec(rule);
     if (!match || types.has(match[1])) throw new CheckInputError('Types must be unique KEY:boolean, KEY:port, or KEY:http-url rules separated by commas.');
     types.set(match[1], match[2]);

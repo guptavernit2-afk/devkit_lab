@@ -291,3 +291,9 @@ Policy loading errors distinguish unreadable files, invalid UTF-8, malformed
 JSON, and unsupported schema/rules. Each still exits with code 2. Messages give
 stage-specific guidance without repeating paths, unknown field names, parser
 snippets, or policy values.
+
+Use `--optional -` to clear a policy's optional list and make every example key
+required. Use `--types -` to clear its type rules. Each dash replaces the entire
+corresponding rule list, regardless of option order; it cannot be mixed with
+comma-separated entries. Other policy checks remain enabled. This explicit
+reset also works without a config file. Allowed-value rules remain config-only.
