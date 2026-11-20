@@ -56,6 +56,9 @@ opt-in reference-cycle diagnostics are supported. See the checker guide for
 policy examples and the precise limits of each check.
 
 For a fuller example, follow the [service onboarding walkthrough](docs/service-onboarding.md).
+Policy rules also support `integer` and `json` settings; use `--explain on` for
+type-specific guidance. `--optional -` and `--types -` clear inherited lists when
+you need a different check for a particular run.
 It combines endpoint validation, allowed log levels, production rules, multiline
 settings, references, and fix hints. Run `npm run test:service` to verify the
 broken-to-corrected workflow locally.

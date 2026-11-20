@@ -24,6 +24,9 @@ PR and commit counts are secondary to useful, reliable behavior.
 - Validate HTTP endpoint syntax and project-specific allowed values.
 - Explain manual fixes with optional text/JSON hints that hide values.
 - Exercise a complete dummy service onboarding flow with file and stdin inputs.
+- Diagnose policy read, encoding, JSON, and schema failures without leaking contents.
+- Clear inherited optional/type rules explicitly from the CLI.
+- Validate decimal integers and JSON syntax in structured environment settings.
 
 ## Next, in priority order
 
