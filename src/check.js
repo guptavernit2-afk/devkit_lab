@@ -14,7 +14,7 @@ Output defaults to text; --format json emits a versioned report without values.
 Options: --optional KEY1,KEY2 allows listed example keys to be absent.
          --config <path> loads policy rules from a JSON file; CLI rules override.
          --env - or --example - reads one settings input from standard input.
-         --types DEBUG:boolean,PORT:port,API_URL:http-url validates declared types.
+         --types KEY:TYPE validates boolean, port, http-url, or integer settings.
          --optional - or --types - clears the corresponding configured rules.
          --references check|ignore checks direct references (default: ignore).
          --extras allow|error rejects undeclared keys (default: allow).
@@ -103,7 +103,7 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
   }
   for (const [key, type] of types) {
     if (!example.settings.has(key) || !settingTypes.includes(type)) {
-      throw new CheckInputError('Type rules require example keys and boolean, port, or http-url types.');
+      throw new CheckInputError(`Type rules require example keys and supported types: ${settingTypes.join(', ')}.`);
     }
   }
   for (const key of optionalKeys) {
@@ -189,8 +189,8 @@ export function checkCommand(args) {
   }
   const types = new Map();
   for (const rule of options.get('--types') && options.get('--types') !== '-' ? options.get('--types').split(',') : []) {
-    const match = /^([A-Za-z_][A-Za-z0-9_]*):(boolean|port|http-url)$/.exec(rule);
-    if (!match || types.has(match[1])) throw new CheckInputError('Types must be unique KEY:boolean, KEY:port, or KEY:http-url rules separated by commas.');
+    const match = /^([A-Za-z_][A-Za-z0-9_]*):([a-z-]+)$/.exec(rule);
+    if (!match || !settingTypes.includes(match[2]) || types.has(match[1])) throw new CheckInputError(`Types must be unique KEY:TYPE rules using ${settingTypes.join(', ')}.`);
     types.set(match[1], match[2]);
   }
   if (!['check', 'ignore'].includes(options.get('--references'))) throw new CheckInputError('References must be check or ignore.');
