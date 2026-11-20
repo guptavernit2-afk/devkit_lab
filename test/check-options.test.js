@@ -32,7 +32,7 @@ test('boolean and port rules validate actual values without leaking them', t => 
 test('type rules compose with optional settings and reject invalid policies', t => {
   const run = checker(t, 'PORT=\n', '');
   assert.equal(run('--optional', 'PORT', '--types', 'PORT:port').exitCode, 0);
-  for (const rules of ['PORT:integer', 'PORT', 'PORT:port,PORT:boolean', 'TYPO:port', 'PORT:port,']) {
+  for (const rules of ['PORT:unknown', 'PORT', 'PORT:port,PORT:boolean', 'TYPO:port', 'PORT:port,']) {
     assert.throws(() => run('--types', rules), error => error.exitCode === 2);
   }
   const empty = checker(t, 'PORT=\n', 'PORT=')('--types', 'PORT:port');

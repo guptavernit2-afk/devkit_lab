@@ -1,6 +1,7 @@
-export const settingTypes = ['boolean', 'port', 'http-url'];
+export const settingTypes = ['boolean', 'port', 'http-url', 'integer'];
 
 export function matchesType(value, type) {
+  if (type === 'integer') return /^(0|-?[1-9]\d*)$/.test(value) && Number.isSafeInteger(Number(value));
   if (type === 'boolean') return /^(true|false)$/.test(value);
   if (type === 'port') return /^[1-9]\d*$/.test(value) && Number(value) <= 65535;
   if (type === 'http-url') {

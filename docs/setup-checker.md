@@ -297,3 +297,13 @@ required. Use `--types -` to clear its type rules. Each dash replaces the entire
 corresponding rule list, regardless of option order; it cannot be mixed with
 comma-separated entries. Other policy checks remain enabled. This explicit
 reset also works without a config file. Allowed-value rules remain config-only.
+
+### Integer settings
+
+Use `--types RETRIES:integer` or `"types": { "RETRIES": "integer" }` for decimal
+integer settings. The accepted range is -9007199254740991 to 9007199254740991
+(inclusive). Zero and negative numbers are allowed. Fractions, exponent notation,
+plus signs, negative zero, leading zeros, and quoted whitespace are rejected.
+This rule validates integer representation, not an application-specific range:
+use allowed-value lists for a small fixed set of choices. Empty/optional behavior
+matches other types, and `--explain on` includes integer-specific guidance.
