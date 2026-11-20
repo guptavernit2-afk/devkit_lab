@@ -286,3 +286,8 @@ HTTP endpoint rules reject literal ASCII control characters (U+0000 through
 U+001F and U+007F) before URL parsing can discard or encode them. Percent-encoded
 sequences remain allowed: the checker validates syntax, not server-side decoding
 or endpoint safety.
+
+Policy loading errors distinguish unreadable files, invalid UTF-8, malformed
+JSON, and unsupported schema/rules. Each still exits with code 2. Messages give
+stage-specific guidance without repeating paths, unknown field names, parser
+snippets, or policy values.
