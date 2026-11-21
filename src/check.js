@@ -109,6 +109,12 @@ export function inspectSettings(exampleText, envText, { optional = [], types = n
   for (const key of optionalKeys) {
     if (!example.settings.has(key)) throw new CheckInputError('Optional keys must be defined in the example file.');
   }
+  for (const [key, values] of allowed) {
+    const type = types.get(key);
+    if (type && !values.some(value => matchesType(value, type))) {
+      throw new CheckInputError('Conflicting policy rules: an allowed-value list has no value matching its type. Align the allowed list and type rule.');
+    }
+  }
   const findings = [];
   const cycles = references ? cycleMembers(actual.settings) : new Set();
   for (const [role, parsed] of [['example', example], ['env', actual]]) {
