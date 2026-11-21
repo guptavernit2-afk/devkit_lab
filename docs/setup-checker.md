@@ -323,3 +323,11 @@ syntax only, not an object schema, number precision, or application meaning.
 Single-quoted `${NAME}` text stays literal; no interpolation is performed.
 Invalid JSON receives a normal `type` finding without native parser errors or
 value snippets. Empty and absent optional settings follow existing rules.
+
+When a key has both an allowed-value list and a type rule, at least one allowed
+choice must satisfy that type. Otherwise the checker exits with input error 2
+and asks you to align the rules, without exposing choices or values. This also
+checks absent optional settings, so a contradictory policy cannot stay hidden.
+Checks use effective rules after CLI overrides. Lists containing both valid and
+invalid choices remain supported: actual settings must satisfy both rules.
+This detects allowed/type contradictions only, not every possible policy conflict.
